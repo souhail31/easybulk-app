@@ -138,9 +138,25 @@ const UserMenu = () => {
 };
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 1024) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Tableau de bord', to: '/', roles: ['superadmin', 'admin'] },
@@ -152,41 +168,53 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
     { icon: Settings, label: 'Configuration', to: '/account', roles: ['superadmin', 'admin'] },
   ];
 
+  const SidebarContent = () => (
+    <>
+      <div className="p-6 flex items-center space-x-3">
+        <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+          <MessageSquare className="text-white w-6 h-6" />
+        </div>
+        {(isSidebarOpen || isMobileMenuOpen) && (
+          <h1 className="font-bold text-xl text-slate-800 tracking-tight">EasyBulk</h1>
+        )}
+      </div>
+
+      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+        {menuItems.map((item) => (
+          <SidebarItem
+            key={item.to}
+            icon={item.icon}
+            label={(isSidebarOpen || isMobileMenuOpen) ? item.label : ''}
+            to={item.to}
+            active={location.pathname === item.to}
+          />
+        ))}
+      </nav>
+    </>
+  );
+
   return (
-    <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex h-[100dvh] bg-[#F8FAFC] overflow-hidden relative">
+      {/* Mobile Drawer Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar (Desktop) */}
       <motion.aside 
         initial={false}
         animate={{ width: isSidebarOpen ? 280 : 80 }}
-        className="bg-white border-r border-slate-200 flex flex-col z-30"
+        className="hidden lg:flex bg-white border-r border-slate-200 flex-col z-30"
       >
-        <div className="p-6 flex items-center space-x-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
-            <MessageSquare className="text-white w-6 h-6" />
-          </div>
-          {isSidebarOpen && (
-            <motion.h1 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="font-bold text-xl text-slate-800 tracking-tight"
-            >
-              EasyBulk
-            </motion.h1>
-          )}
-        </div>
-
-        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-          {menuItems.map((item) => (
-            <SidebarItem
-              key={item.to}
-              icon={item.icon}
-              label={isSidebarOpen ? item.label : ''}
-              to={item.to}
-              active={location.pathname === item.to}
-            />
-          ))}
-        </nav>
-
+        <SidebarContent />
         <div className="p-4 border-t border-slate-100">
            <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -197,26 +225,51 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </motion.aside>
 
+      {/* Sidebar (Mobile) */}
+      <motion.aside
+        initial={{ x: '-100%' }}
+        animate={{ x: isMobileMenuOpen ? 0 : '-100%' }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className="fixed top-0 left-0 bottom-0 w-72 bg-white z-50 lg:hidden flex flex-col border-r border-slate-200 shadow-2xl"
+      >
+        <SidebarContent />
+        <div className="p-6">
+          <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="w-full py-3 bg-slate-50 rounded-xl text-slate-500 font-bold flex items-center justify-center space-x-2"
+          >
+            <X className="w-5 h-5" />
+            <span>Fermer</span>
+          </button>
+        </div>
+      </motion.aside>
+
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 transition-all duration-300">
-        <header className="h-20 bg-white border-bottom border-slate-200 px-8 flex items-center justify-between z-20">
+      <main className="flex-1 flex flex-col min-w-0">
+        <header className="h-20 bg-white border-b border-slate-200 px-4 md:px-8 flex items-center justify-between z-20 shrink-0">
           <div className="flex items-center space-x-4">
-             <h2 className="text-lg font-bold text-slate-800">
+             <button 
+               onClick={() => setIsMobileMenuOpen(true)}
+               className="p-2 -ml-2 lg:hidden text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+             >
+               <Menu className="w-6 h-6" />
+             </button>
+             <h2 className="text-lg font-bold text-slate-800 truncate">
                {menuItems.find(i => i.to === location.pathname)?.label || 'Aperçu'}
              </h2>
           </div>
 
-          <div className="flex items-center space-x-4">
-             <button className="relative p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all">
+          <div className="flex items-center space-x-2 md:space-x-4">
+             <button className="hidden sm:flex relative p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all">
                <Bell className="w-5 h-5" />
                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
              </button>
-             <div className="w-px h-8 bg-slate-200 mx-2"></div>
+             <div className="hidden sm:block w-px h-8 bg-slate-200 mx-2"></div>
              <UserMenu />
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
            <div className="max-w-7xl mx-auto">
              {children}
            </div>

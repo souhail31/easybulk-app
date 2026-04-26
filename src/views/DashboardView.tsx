@@ -55,7 +55,7 @@ export default function DashboardView() {
   return (
     <div className="space-y-8 pb-12">
       {/* Top Welcome */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-blue-600 rounded-3xl p-8 text-white shadow-xl shadow-blue-100">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-blue-600 rounded-[2rem] p-6 md:p-8 text-white shadow-xl shadow-blue-100">
         <div>
           <h1 className="text-2xl font-bold">Bonjour 👋</h1>
           <p className="text-blue-100 mt-1">Voici ce qui se passe sur votre plateforme EasyBulk aujourd'hui.</p>
@@ -103,7 +103,7 @@ export default function DashboardView() {
       {/* Main Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Evolution Chart */}
-        <Card className="lg:col-span-2 p-8">
+        <Card className="lg:col-span-2 p-5 md:p-8">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-lg font-bold text-slate-900">Évolution des envois</h3>
@@ -132,7 +132,7 @@ export default function DashboardView() {
         </Card>
 
         {/* Distribution Chart */}
-        <Card className="p-8 flex flex-col">
+        <Card className="p-5 md:p-8 flex flex-col">
           <h3 className="text-lg font-bold text-slate-900 mb-1">Budget par Groupe</h3>
           <p className="text-sm text-slate-500 mb-8">Répartition des coûts actuels</p>
           

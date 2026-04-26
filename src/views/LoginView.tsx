@@ -78,12 +78,12 @@ export default function LoginView() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-slate-50 relative overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center p-4 md:p-6 bg-slate-50 relative overflow-hidden">
       {/* Decorative blobs */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50 -mr-20 -mt-20"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-100 rounded-full blur-3xl opacity-50 -ml-20 -mb-20"></div>
+      <div className="absolute top-0 right-0 w-64 md:w-96 h-64 md:h-96 bg-blue-100 rounded-full blur-3xl opacity-50 -mr-20 -mt-20"></div>
+      <div className="absolute bottom-0 left-0 w-64 md:w-96 h-64 md:h-96 bg-purple-100 rounded-full blur-3xl opacity-50 -ml-20 -mb-20"></div>
 
-      <div className="w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl shadow-blue-900/5 p-12 relative z-10 border border-white">
+      <div className="w-full max-w-lg bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-2xl shadow-blue-900/5 p-6 md:p-12 relative z-10 border border-white">
         
         <AnimatePresence mode="wait">
           {step === 1 ? (
