@@ -5,6 +5,7 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import pg from "pg";
 import dotenv from "dotenv";
+import { IntelligentNotificationService } from "./src/services/notificationService.js";
 
 dotenv.config();
 
@@ -163,7 +164,7 @@ function createPasswordHash(password: string) {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = 3001;
 
   // Database Connection
   const pool = new Pool({
@@ -194,6 +195,7 @@ async function startServer() {
       "ALTER TABLE campagne ADD COLUMN IF NOT EXISTS groupe_id INTEGER REFERENCES groupe(id)",
       "CREATE UNIQUE INDEX IF NOT EXISTS idx_membership_invitation_token ON membership (invitation_token) WHERE invitation_token IS NOT NULL",
       "CREATE INDEX IF NOT EXISTS idx_membership_invitation_email ON membership (LOWER(invitation_email)) WHERE invitation_email IS NOT NULL",
+      "CREATE TABLE IF NOT EXISTS generated_notifications (id SERIAL PRIMARY KEY, source_data JSONB, content TEXT, priority VARCHAR(20), classification_score FLOAT, user_id INTEGER REFERENCES users(id), created_at TIMESTAMP DEFAULT NOW())",
     ];
 
     for (const query of queries) {
@@ -408,6 +410,27 @@ async function startServer() {
   }
 
   await ensureUserSetup();
+
+  // Start Intelligent Notification Service
+  const notificationService = new IntelligentNotificationService(pool);
+  notificationService.start().catch(err => {
+    console.error("Failed to start Intelligent Notification Service:", err);
+  });
+
+  // Notifications Endpoints
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      const result = await pool.query(`
+        SELECT id, content, priority, created_at, classification_score 
+        FROM generated_notifications 
+        ORDER BY created_at DESC 
+        LIMIT 10
+      `);
+      res.json(result.rows);
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  });
 
   // API Routes
   app.get("/api/health", async (req, res) => {

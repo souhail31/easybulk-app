@@ -3,15 +3,18 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   User, 
   Lock, 
-  Mail, 
   Phone,
   MessageSquare,
   ChevronRight,
   ShieldCheck,
   CheckCircle2,
-  AtSign
+  AtSign,
+  Building2,
+  AlertCircle
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '../lib/utils';
 
 interface InvitationDetails {
   email: string;
@@ -24,6 +27,7 @@ interface InvitationDetails {
 export default function InvitationView() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -47,7 +51,7 @@ export default function InvitationView() {
         const result = await response.json();
         
         if (!response.ok) {
-          throw new Error(result.error || 'Invitation invalide ou expiré.');
+          throw new Error(result.error || t('invitation.invalid'));
         }
         
         setInvitation(result);
@@ -66,7 +70,7 @@ export default function InvitationView() {
           }
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur lors du chargement de l\'invitation.');
+        setError(err instanceof Error ? err.message : t('invitation.invalid'));
       } finally {
         setLoading(false);
       }
@@ -75,21 +79,21 @@ export default function InvitationView() {
     if (token) {
       fetchInvitation();
     } else {
-      setError('Token d\'invitation manquant.');
+      setError(t('invitation.missing_token'));
       setLoading(false);
     }
-  }, [token]);
+  }, [token, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.');
+      setError(t('invitation.err_password_match'));
       return;
     }
     
     if (formData.password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères.');
+      setError(t('invitation.err_password_len'));
       return;
     }
 
@@ -112,7 +116,7 @@ export default function InvitationView() {
       const result = await response.json();
       
       if (!response.ok) {
-        throw new Error(result.error || 'Erreur lors de la création du compte.');
+        throw new Error(result.error || t('invitation.invalid'));
       }
       
       setSuccess(true);
@@ -121,7 +125,7 @@ export default function InvitationView() {
       }, 3000);
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Impossible de créer le compte.');
+      setError(err instanceof Error ? err.message : t('invitation.invalid'));
     } finally {
       setSubmitting(false);
     }
@@ -133,27 +137,27 @@ export default function InvitationView() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center p-6 bg-slate-50">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen w-full flex items-center justify-center p-6 bg-surface">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-slate-50 relative overflow-hidden">
-      {/* Decorative blobs */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50 -mr-20 -mt-20"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-100 rounded-full blur-3xl opacity-50 -ml-20 -mb-20"></div>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 md:p-6 bg-surface relative overflow-hidden font-sans">
+      {/* Dynamic Background */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -mr-40 -mt-40 animate-pulse"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/10 rounded-full blur-[120px] -ml-40 -mb-40"></div>
 
-      <div className="w-full max-w-xl bg-white rounded-[2.5rem] shadow-2xl shadow-blue-900/5 p-12 relative z-10 border border-white">
-        <div className="flex flex-col items-center text-center space-y-4 mb-10">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-200">
-            <MessageSquare className="text-white w-8 h-8" />
+      <div className="w-full max-w-2xl bg-white/70 backdrop-blur-2xl rounded-[3rem] shadow-2xl shadow-primary/5 p-8 md:p-14 relative z-10 border border-white/50">
+        <div className="flex flex-col items-center text-center space-y-6 mb-12">
+          <div className="w-20 h-20 bg-primary rounded-[2rem] flex items-center justify-center shadow-2xl shadow-primary/30">
+            <MessageSquare className="text-white w-10 h-10" />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Finaliser votre compte</h1>
-            <p className="text-slate-500 font-medium mt-2">
-              Rejoignez <span className="text-slate-800 font-bold">{invitation?.organization || 'l\'organisation'}</span> sur EasyBulk
+            <h1 className="text-4xl font-black text-on-surface tracking-tighter mb-2">{t('invitation.title')}</h1>
+            <p className="text-on-surface-variant/70 font-bold text-lg">
+              {t('invitation.subtitle_prefix')} <span className="text-primary font-black px-2 py-0.5 bg-primary/5 rounded-lg border border-primary/10">{invitation?.organization || 'l\'organisation'}</span> {t('invitation.subtitle_suffix')}
             </p>
           </div>
         </div>
@@ -161,81 +165,89 @@ export default function InvitationView() {
         <AnimatePresence mode="wait">
           {success ? (
             <motion.div 
+              key="success"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center text-center space-y-6 py-8"
+              className="flex flex-col items-center text-center space-y-6 py-12"
             >
-              <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+              <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center shadow-xl shadow-emerald-500/20">
+                <CheckCircle2 className="w-12 h-12 text-emerald-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Compte créé avec succès !</h2>
-                <p className="text-slate-500 mt-2">Vous allez être redirigé vers la page de connexion...</p>
+                <h2 className="text-3xl font-black text-on-surface tracking-tighter mb-2">{t('invitation.success')}</h2>
+                <p className="text-on-surface-variant font-bold text-lg">{t('invitation.success_sub')}</p>
               </div>
             </motion.div>
           ) : error && !invitation ? (
             <motion.div 
+              key="error"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center"
+              className="flex flex-col items-center text-center py-8"
             >
-              <h3 className="font-bold text-rose-800 mb-2">Invitation Invalide</h3>
-              <p className="text-sm text-rose-600">{error}</p>
+              <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-rose-500/20">
+                <AlertCircle className="w-10 h-10 text-rose-600" />
+              </div>
+              <h3 className="text-2xl font-black text-on-surface tracking-tighter mb-2">{t('invitation.invalid')}</h3>
+              <p className="text-rose-600 font-bold bg-rose-50 px-4 py-2 rounded-xl mb-8">{error}</p>
               <button 
                 onClick={() => navigate('/login')}
-                className="mt-6 px-6 py-2.5 bg-rose-600 text-white font-bold rounded-xl shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all"
+                className="px-8 py-4 bg-on-surface text-white font-black rounded-[1.5rem] shadow-xl hover:bg-on-surface-variant transition-all uppercase tracking-widest text-sm"
               >
-                Retour à la connexion
+                {t('invitation.back_to_login')}
               </button>
             </motion.div>
           ) : (
             <motion.form 
+              key="form"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               onSubmit={handleSubmit} 
-              className="space-y-6"
+              className="space-y-8"
             >
               {error && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 font-medium">
+                <div className="rounded-[1.5rem] border border-rose-200 bg-rose-50 p-4 text-sm font-bold text-rose-700 flex items-center shadow-sm">
+                   <AlertCircle className="w-5 h-5 mr-3 shrink-0" />
                   {error}
                 </div>
               )}
 
-              <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 mb-6">
-                <div className="flex items-center space-x-3 text-sm">
-                  <div className="flex-1">
-                    <p className="text-slate-500">Email professionnel</p>
-                    <p className="font-bold text-slate-900">{invitation?.email}</p>
-                  </div>
-                  <div className="w-px h-8 bg-blue-200 mx-2"></div>
-                  <div className="flex-1">
-                    <p className="text-slate-500">Rôle assigné</p>
-                    <div className="flex items-center space-x-1.5 mt-0.5">
-                      <ShieldCheck className="w-4 h-4 text-blue-600" />
-                      <p className="font-bold text-slate-900">{invitation?.role}</p>
-                    </div>
+              <div className="rounded-[2rem] border-2 border-primary/20 bg-primary/5 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-inner">
+                <div className="flex-1">
+                  <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">{t('users.form_email')}</p>
+                  <p className="font-black text-on-surface text-lg">{invitation?.email}</p>
+                </div>
+                <div className="hidden md:block w-px h-12 bg-primary/20 mx-4"></div>
+                <div className="flex-1">
+                  <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1">{t('users.form_role')}</p>
+                  <div className="flex items-center space-x-2 rtl:space-x-reverse bg-white w-fit px-3 py-1.5 rounded-xl shadow-sm">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    <p className="font-black text-on-surface uppercase tracking-widest text-xs">{invitation?.role}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 ml-1">Prénom</label>
+                  <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2 rtl:ml-0 rtl:mr-2">{t('invitation.form_fname')}</label>
                   <div className="relative group">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-outline group-focus-within:text-primary transition-colors rtl:left-auto rtl:right-4" />
                     <input 
                       type="text" 
                       name="firstName"
                       required
                       value={formData.firstName}
                       onChange={handleChange}
-                      className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white transition-all outline-none text-slate-900 font-medium"
-                      placeholder="Prénom"
+                      className={cn(
+                        "w-full py-4.5 rounded-[1.5rem] bg-surface-container/50 border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none text-on-surface font-bold text-lg shadow-sm",
+                        i18n.dir() === 'rtl' ? 'pr-12 pl-4' : 'pl-12 pr-4'
+                      )}
+                      placeholder={t('invitation.form_fname')}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 ml-1">Nom</label>
+                  <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2 rtl:ml-0 rtl:mr-2">{t('invitation.form_lname')}</label>
                   <div className="relative group">
                     <input 
                       type="text" 
@@ -243,72 +255,84 @@ export default function InvitationView() {
                       required
                       value={formData.lastName}
                       onChange={handleChange}
-                      className="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white transition-all outline-none text-slate-900 font-medium"
-                      placeholder="Nom de famille"
+                      className="w-full px-6 py-4.5 rounded-[1.5rem] bg-surface-container/50 border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none text-on-surface font-bold text-lg shadow-sm"
+                      placeholder={t('invitation.form_lname')}
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 ml-1">Nom d'utilisateur</label>
+                  <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2 rtl:ml-0 rtl:mr-2">{t('invitation.form_username')}</label>
                   <div className="relative group">
-                    <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-outline group-focus-within:text-primary transition-colors rtl:left-auto rtl:right-4" />
                     <input 
                       type="text" 
                       name="userName"
                       required
                       value={formData.userName}
                       onChange={handleChange}
-                      className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white transition-all outline-none text-slate-900 font-medium"
+                      className={cn(
+                        "w-full py-4.5 rounded-[1.5rem] bg-surface-container/50 border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none text-on-surface font-bold text-lg shadow-sm",
+                        i18n.dir() === 'rtl' ? 'pr-12 pl-4' : 'pl-12 pr-4'
+                      )}
                       placeholder="Identifiant"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 ml-1">Numéro de téléphone</label>
+                  <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2 rtl:ml-0 rtl:mr-2">{t('invitation.form_phone')}</label>
                   <div className="relative group">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-outline group-focus-within:text-primary transition-colors rtl:left-auto rtl:right-4" />
                     <input 
                       type="tel" 
                       name="phoneNumber"
                       value={formData.phoneNumber}
                       onChange={handleChange}
-                      className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white transition-all outline-none text-slate-900 font-medium"
+                      className={cn(
+                        "w-full py-4.5 rounded-[1.5rem] bg-surface-container/50 border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none text-on-surface font-bold text-lg shadow-sm",
+                        i18n.dir() === 'rtl' ? 'pr-12 pl-4' : 'pl-12 pr-4'
+                      )}
                       placeholder="+216 XX XXX XXX"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 ml-1">Mot de passe</label>
+                  <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2 rtl:ml-0 rtl:mr-2">{t('invitation.form_password')}</label>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-outline group-focus-within:text-primary transition-colors rtl:left-auto rtl:right-4" />
                     <input 
                       type="password" 
                       name="password"
                       required
                       value={formData.password}
                       onChange={handleChange}
-                      className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white transition-all outline-none text-slate-900 font-medium"
+                      className={cn(
+                        "w-full py-4.5 rounded-[1.5rem] bg-surface-container/50 border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none text-on-surface font-bold text-lg shadow-sm",
+                        i18n.dir() === 'rtl' ? 'pr-12 pl-4' : 'pl-12 pr-4'
+                      )}
                       placeholder="••••••••"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-slate-700 ml-1">Confirmer mot de passe</label>
+                  <label className="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em] ml-2 rtl:ml-0 rtl:mr-2">{t('invitation.form_password_confirm')}</label>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-outline group-focus-within:text-primary transition-colors rtl:left-auto rtl:right-4" />
                     <input 
                       type="password" 
                       name="confirmPassword"
                       required
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white transition-all outline-none text-slate-900 font-medium"
+                      className={cn(
+                        "w-full py-4.5 rounded-[1.5rem] bg-surface-container/50 border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none text-on-surface font-bold text-lg shadow-sm",
+                        i18n.dir() === 'rtl' ? 'pr-12 pl-4' : 'pl-12 pr-4'
+                      )}
                       placeholder="••••••••"
                     />
                   </div>
@@ -318,14 +342,14 @@ export default function InvitationView() {
               <button 
                 type="submit"
                 disabled={submitting}
-                className="w-full py-4 mt-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-lg transition-all shadow-xl shadow-blue-200 flex items-center justify-center space-x-2 disabled:opacity-70"
+                className="w-full py-5 mt-8 rounded-[1.5rem] bg-primary hover:bg-primary-container text-white font-black text-xl transition-all shadow-xl shadow-primary/20 flex items-center justify-center space-x-3 disabled:opacity-70 group"
               >
                 {submitting ? (
                   <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   <>
-                    <span>Créer mon compte</span>
-                    <ChevronRight className="w-5 h-5" />
+                    <span className="uppercase tracking-widest text-sm">{t('invitation.create_btn')}</span>
+                    <ChevronRight className={cn("w-6 h-6 transition-transform group-hover:translate-x-1", i18n.dir() === 'rtl' ? 'rotate-180 group-hover:-translate-x-1' : '')} />
                   </>
                 )}
               </button>

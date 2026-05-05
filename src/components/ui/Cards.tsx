@@ -4,7 +4,7 @@ import { LucideIcon } from 'lucide-react';
 import { cn, formatNumber } from '../../lib/utils';
 
 export const Card = ({ children, className }: { children: React.ReactNode, className?: string, key?: React.Key }) => (
-  <div className={cn("bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden", className)}>
+  <div className={cn("bg-white rounded-2xl border border-outline-variant/30 shadow-sm overflow-hidden", className)}>
     {children}
   </div>
 );
@@ -23,29 +23,29 @@ export const StatCard = ({
   color?: "blue" | "green" | "purple" | "orange"
 }) => {
   const colorClasses = {
-    blue: "bg-blue-50 text-blue-600 shadow-blue-100",
-    green: "bg-emerald-50 text-emerald-600 shadow-emerald-100",
-    purple: "bg-purple-50 text-purple-600 shadow-purple-100",
-    orange: "bg-orange-50 text-orange-600 shadow-orange-100"
+    blue: "bg-primary/10 text-primary",
+    green: "bg-emerald-50 text-emerald-500",
+    purple: "bg-purple-50 text-purple-600",
+    orange: "bg-amber-50 text-amber-500"
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{label}</p>
-          <h3 className="text-3xl font-bold text-slate-900 mt-2">
+        <div className="space-y-1">
+          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{label}</p>
+          <h3 className="text-2xl font-bold text-on-surface">
             {typeof value === 'number' ? formatNumber(value) : value}
           </h3>
           {trend && (
-            <div className={cn("flex items-center space-x-1 mt-2 text-sm font-semibold", trend.up ? "text-emerald-600" : "text-rose-600")}>
+            <div className={cn("flex items-center space-x-1 mt-2 text-xs font-bold", trend.up ? "text-emerald-500" : "text-rose-500")}>
               <span>{trend.up ? '↑' : '↓'} {trend.value}</span>
-              <span className="text-slate-400 font-normal">vs mois précédent</span>
+              <span className="text-on-surface-variant/60 font-medium">vs dernier mois</span>
             </div>
           )}
         </div>
-        <div className={cn("p-4 rounded-xl shadow-sm", colorClasses[color])}>
-          <Icon className="w-6 h-6" />
+        <div className={cn("p-3.5 rounded-xl", colorClasses[color])}>
+          <Icon className="w-5 h-5" />
         </div>
       </div>
     </Card>
